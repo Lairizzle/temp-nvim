@@ -527,13 +527,20 @@ vim.keymap.set("n", "<leader>tc", ":tabclose<CR>", {
 vim.api.nvim_create_autocmd("BufWritePre", {
 	pattern = "*.py",
 	callback = function(args)
-		vim.lsp.buf.format({
+		local clients = vim.lsp.get_clients({
 			bufnr = args.buf,
-			async = false,
-			timeout_ms = 5000,
-			filter = function(client)
-				return client.name == "ruff"
-			end,
+			name = "ruff",
 		})
+
+		if #clients > 0 then
+			vim.lsp.buf.format({
+				bufnr = args.buf,
+				async = false,
+				timeout_ms = 5000,
+				filter = function(client)
+					return client.name == "ruff"
+				end,
+			})
+		end
 	end,
 })
