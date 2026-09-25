@@ -463,3 +463,77 @@ vim.keymap.set("n", "<leader>fb", builtin.buffers, {
 vim.keymap.set("n", "<leader>fh", builtin.help_tags, {
 	desc = "Help",
 })
+
+-- ============================================================
+-- Built-in Tabline
+-- ============================================================
+
+vim.opt.showtabline = 2
+vim.opt.tabline = "%!v:lua.MyTabLine()"
+
+function MyTabLine()
+	local s = ""
+
+	for i = 1, vim.fn.tabpagenr("$") do
+		local winnr = vim.fn.tabpagewinnr(i)
+		local bufnr = vim.fn.tabpagebuflist(i)[winnr]
+		local name = vim.fn.bufname(bufnr)
+
+		if name == "" then
+			name = "[No Name]"
+		else
+			name = vim.fn.fnamemodify(name, ":t")
+		end
+
+		if i == vim.fn.tabpagenr() then
+			s = s .. "%#TabLineSel#"
+		else
+			s = s .. "%#TabLine#"
+		end
+
+		s = s .. "  " .. i .. ": " .. name .. "  "
+	end
+
+	s = s .. "%#TabLineFill#%T"
+
+	return s
+end
+
+-- Tab navigation
+vim.keymap.set("n", "<leader>tn", ":tabnew<CR>", {
+	silent = true,
+	desc = "New tab",
+})
+
+vim.keymap.set("n", "<Tab>", ":tabnext<CR>", {
+	silent = true,
+	desc = "Next tab",
+})
+
+vim.keymap.set("n", "<S-Tab>", ":tabprevious<CR>", {
+	silent = true,
+	desc = "Previous tab",
+})
+
+vim.keymap.set("n", "<leader>tc", ":tabclose<CR>", {
+	silent = true,
+	desc = "Close tab",
+})
+
+-- ============================================================
+-- Python Format on Save
+-- ============================================================
+
+vim.api.nvim_create_autocmd("BufWritePre", {
+	pattern = "*.py",
+	callback = function(args)
+		vim.lsp.buf.format({
+			bufnr = args.buf,
+			async = false,
+			timeout_ms = 5000,
+			filter = function(client)
+				return client.name == "ruff"
+			end,
+		})
+	end,
+})
